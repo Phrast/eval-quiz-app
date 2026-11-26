@@ -1,0 +1,75 @@
+# CD — uniquement après fusion dans main (push sur main), jamais sur une Pull Request.
+# Reconstruit les images, revérifie avec Trivy (CRITICAL => rien n'est publié), publie dans ACR
+# avec le SHA court du commit comme tag, puis met à jour les deux Container Apps (nouvelle révision).
+# Connexion Azure en OIDC : aucun mot de passe stocké dans GitHub (voir scripts/setup-github-oidc.sh).
+name: CD
+
+on:
+  push:
+    branches: [main]                 # main n'accepte que des PR : push = fusion
+  workflow_dispatch:                 # bouton "Run workflow" pour relancer à la main
+
+permissions:
+  contents: read
+  id-token: write                    # autorise la demande du jeton OIDC
+
+concurrency:
+  group: deploy-main                 # jamais deux déploiements en même temps
+  cancel-in-progress: false
+
+env:
+  # Même image que ci.yml : Trivy 0.76.2 épinglé par digest (version vérifiée après la compromission de mars 2026)
+  TRIVY_IMAGE: ghcr.io/aquasecurity/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb
+  ACR: ${{ vars.ACR_NAME }}.azurecr.io
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Tag traçable = SHA court du commit
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Connexion Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906       # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Connexion à ACR
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Construire les images
+        run: |
+          docker build -t "$ACR/quiz-backend:$TAG" ./backend
+          docker build -t "$ACR/quiz-frontend:$TAG" .
+
+      - name: Trivy bloquant avant publication (CRITICAL => échec)
+        run: |
+          for svc in backend frontend; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v trivy-cache:/root/.cache/ \
+              "$TRIVY_IMAGE" image --no-progress --severity CRITICAL --exit-code 1 "$ACR/quiz-$svc:$TAG"
+          done
+
+      - name: Publier dans ACR
+        run: |
+          docker push "$ACR/quiz-backend:$TAG"
+          docker push "$ACR/quiz-frontend:$TAG"
+
+      - name: Mettre à jour les Container Apps (nouvelle image => nouvelle révision)
+        run: |
+          az extension add --name containerapp --upgrade --only-show-errors
+          az containerapp update -n "${{ vars.BACKEND_APP }}"  -g "${{ vars.RESOURCE_GROUP }}" --image "$ACR/quiz-backend:$TAG"  -o none
+          az containerapp update -n "${{ vars.FRONTEND_APP }}" -g "${{ vars.RESOURCE_GROUP }}" --image "$ACR/quiz-frontend:$TAG" -o none
+
+      - name: Vérifier (révisions + /health)
+        run: |
+          for app in "${{ vars.BACKEND_APP }}" "${{ vars.FRONTEND_APP }}"; do
+            az containerapp revision list -n "$app" -g "${{ vars.RESOURCE_GROUP }}" \
+              --query "[].{revision:name, active:properties.active, image:properties.template.containers[0].image, cree:properties.createdTime}" -o table
+          done
+          FQDN=$(az containerapp show -n "${{ vars.FRONTEND_APP }}" -g "${{ vars.RESOURCE_GROUP }}" --query properties.configuration.ingress.fqdn -o tsv)
+          curl -fsS --retry 5 --retry-delay 10 "https://$FQDN/health"
