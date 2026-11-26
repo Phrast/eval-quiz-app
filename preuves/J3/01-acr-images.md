@@ -115,3 +115,14 @@ acrquizmb2611.azurecr.io/quiz-backend:90beed9  273MB
 | Images publiées = images durcies J2 | ✔ Dockerfiles v2 de la PR #6 |
 
 **Suite (J4) :** `bash scripts/deploy.sh` crée l'environnement Container Apps, l'identité AcrPull, le backend (ingress interne) puis le frontend (ingress externe), à partir de ces images.
+
+---
+
+## Captures du portail Azure
+
+| Capture | Ce qu'elle montre |
+|---|---|
+| ![ACR](01-portail-acr.png) | vue d'ensemble du registre `acrquizmb2611` |
+| ![Dépôts](02-portail-acr-depots.png) | dépôts `quiz-backend` et `quiz-frontend` |
+| ![Tags](03-portail-acr-tags.png) | tags de `quiz-backend` = SHA de commits |
+| ![Admin désactivé](04-portail-acr-admin.png) | *Utilisateur administrateur* décoché : aucun mot de passe de registre |
