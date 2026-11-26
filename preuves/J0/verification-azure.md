@@ -139,12 +139,155 @@ Le groupe de test est supprimé avec son contenu. Aucune ressource payante n'a �
 
 ---
 
-## Abonnement du projet (binôme)
+## Abonnement de Mathis (projet)
 
-⚠️ À compléter par le binôme avec les mêmes vérifications (connexion, fournisseurs, rôle, crédits, régions autorisées, disponibilité des services), en masquant les identifiants.
+**Date :** 26/11/2026
+**Rôle dans le projet :** abonnement principal. Il héberge l'ACR, l'environnement Container Apps, les deux applications et les identités managées.
+
+### 1. Connexion et abonnement actif
+
+```console
+$ az login --use-device-code
+(connexion via le navigateur, code de connexion masqué)
+
+$ az account show --query "{name:name, state:state, isDefault:isDefault}" -o table
+Name                State    IsDefault
+------------------  -------  -----------
+Azure for Students  Enabled  True
+```
+
+**Résultat :** l'abonnement « Azure for Students » est actif (`Enabled`) et sélectionné par défaut.
+
+### 2. Fournisseurs de ressources
+
+```console
+$ for ns in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.ManagedIdentity; do
+    az provider register --namespace $ns --wait
+  done
+
+$ for ns in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.ManagedIdentity; do
+    printf '%-32s %s\n' "$ns" "$(az provider show -n $ns --query registrationState -o tsv)"; done
+Microsoft.App                    Registered
+Microsoft.OperationalInsights    Registered
+Microsoft.ContainerRegistry      Registered
+Microsoft.ManagedIdentity        Registered
+```
+
+**Résultat :** les 4 fournisseurs sont enregistrés (`Registered`).
+
+### 3. Rôle sur l'abonnement
+
+```console
+$ az role assignment list --assignee "$(az ad signed-in-user show --query id -o tsv)" --all \
+    --query "[].{role:roleDefinitionName, scope:scope}" -o table
+Role    Scope
+------  ------------------------------------
+Owner   /subscriptions/<id-abonnement masqué>
+```
+
+**Résultat :** rôle **Owner** sur l'abonnement. Il permet d'attribuer AcrPull (Container Apps), puis AcrPush et Contributor (identité OIDC de la CD).
+
+### 4. Crédits restants
+
+**Crédits restants au 26/11/2026 : 100 $** (portail Azure → *Education*). Le crédit est entier : aucune ressource payante n'a encore été créée.
+
+### 5. Région : test de France Central
+
+```console
+$ az group create -n rg-test-region -l francecentral
+(groupe créé : "provisioningState": "Succeeded")
+
+$ az identity create -n id-test-region -g rg-test-region -l francecentral -o none
+ERROR: (RequestDisallowedByAzure) Resource 'id-test-region' was disallowed by Azure: This policy maintains a set of
+best available regions where your subscription can deploy resources. [...]
+Code: RequestDisallowedByAzure
+```
+
+**Résultat :** on obtient le même comportement que sur l'abonnement de secours. Le groupe est accepté, mais la ressource est refusée. France Central est donc **inutilisable**.
+
+### 6. Régions autorisées
+
+```console
+$ az policy assignment list --disable-scope-strict-match \
+    --query "[?parameters.listOfAllowedLocations].{nom:displayName, regions:parameters.listOfAllowedLocations.value}" -o json
+[
+  {
+    "nom": "Allowed resource deployment regions",
+    "regions": [ "belgiumcentral", "denmarkeast", "italynorth", "spaincentral", "norwayeast" ]
+  }
+]
+```
+
+⚠️ **La liste diffère de celle de l'abonnement de secours.** `germanywestcentral` n'y figure **pas**, et `norwayeast` remplace cette région.
+
+### 7. Disponibilité des services dans ces régions
+
+```console
+$ az provider show -n Microsoft.App --query "resourceTypes[?resourceType=='managedEnvironments'].locations[]" -o tsv | grep -iE "belgium|denmark|italy|spain|norway"
+Norway East
+Belgium Central
+Spain Central
+Italy North
+
+$ az provider show -n Microsoft.ContainerRegistry --query "resourceTypes[?resourceType=='registries'].locations[]" -o tsv | grep -iE "belgium|denmark|italy|spain|norway"
+Norway East
+Norway West
+Italy North
+Spain Central
+Belgium Central
+Denmark East
+
+$ az provider show -n Microsoft.OperationalInsights --query "resourceTypes[?resourceType=='workspaces'].locations[]" -o tsv | grep -iE "belgium|denmark|italy|spain|norway"
+Norway East
+Norway West
+Italy North
+Spain Central
+Denmark East
+Belgium Central
+```
+
+`Norway West` apparaît à cause du filtre `grep`, mais ne fait pas partie des régions autorisées.
+
+| Région | Autorisée | Azure Container Apps | ACR | Log Analytics | Utilisable |
+|---|---|---|---|---|---|
+| `italynorth` | ✔ | ✔ | ✔ | ✔ | ✔ |
+| `spaincentral` | ✔ | ✔ | ✔ | ✔ | ✔ |
+| `belgiumcentral` | ✔ | ✔ | ✔ | ✔ | ✔ |
+| `norwayeast` | ✔ | ✔ | ✔ | ✔ | ✔ |
+| `denmarkeast` | ✔ | ✘ | ✔ | ✔ | ✘ (pas de Container Apps) |
+
+### 8. Nettoyage
+
+```console
+$ az resource list -g rg-test-region -o table
+(aucune ressource : l'identité de test a été refusée)
+
+$ az group delete -n rg-test-region --yes --no-wait
+```
+
+Le groupe de test est vide. Sa suppression ne concerne donc aucune ressource payante.
+
+### Restrictions constatées
+
+- **Région** : 5 régions autorisées par la règle « Allowed resource deployment regions ». France Central est refusée (`RequestDisallowedByAzure`).
+- **Denmark East** : autorisée, mais Azure Container Apps n'y est pas disponible.
+- **Germany West Central**, proposée plus haut, est **refusée** sur cet abonnement.
 
 ---
 
 ## Décision finale
 
-⚠️ À compléter une fois les deux abonnements vérifiés : région retenue (présente dans les deux listes), abonnement utilisé pour le déploiement, restrictions signalées au formateur.
+| Région | Abonnement de secours (Nicolas) | Abonnement du projet (Mathis) |
+|---|---|---|
+| `italynorth` | ✔ | ✔ |
+| `spaincentral` | ✔ | ✔ |
+| `belgiumcentral` | ✔ | ✔ |
+| `germanywestcentral` | ✔ | ✘ |
+| `norwayeast` | ✘ | ✔ |
+
+- **Abonnement utilisé pour le déploiement :** celui de Mathis. Celui de Nicolas reste en secours.
+- **Région retenue : `italynorth`** (Milan).
+  - Elle est autorisée **sur les deux abonnements**, avec Container Apps, ACR et Log Analytics disponibles. En cas de bascule sur l'abonnement de secours, `deploy.sh` fonctionne sans changer `LOCATION`.
+  - C'est une région en service depuis 2023, plus éprouvée que Belgium Central, ouverte plus récemment.
+  - Elle est proche de la région Neon Frankfurt (J5), ce qui limite la latence entre le backend et la base.
+- **Restrictions à signaler au formateur :** liste de régions imposée et différente selon le compte étudiant, et France Central refusée.
