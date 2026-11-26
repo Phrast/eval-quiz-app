@@ -162,3 +162,4 @@ vite.config.ts.timestamp-*
 node_modules/
 dist/
 *.log
+!.env.azure.example
