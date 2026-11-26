@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+    <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/></marker>
+    <marker id="a-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+    <style>
+      .t  { font-size: 15px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 12.5px; fill: #374151; }
+      .l  { font-size: 12px; fill: #1f2937; }
+      .band { font-size: 17px; font-weight: 700; fill: #1e3a8a; }
+      .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="900" fill="#ffffff"/>
+  <text x="600" y="38" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a">Quiz App — du code à l'utilisateur</text>
+
+  <!-- ================= BANDE 1 : LIVRAISON ================= -->
+  <rect x="20" y="60" width="1160" height="235" rx="12" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="40" y="88" class="band">1. Livraison du code — GitHub (fork Phrast/eval-quiz-app)</text>
+
+  <rect x="40"  y="108" width="190" height="96" rx="8" class="box"/>
+  <text x="135" y="135" text-anchor="middle" class="t">Développeur</text>
+  <text x="135" y="158" text-anchor="middle" class="s">branche feature/*</text>
+  <text x="135" y="178" text-anchor="middle" class="s">git commit + git push</text>
+
+  <rect x="270" y="108" width="190" height="96" rx="8" class="box"/>
+  <text x="365" y="135" text-anchor="middle" class="t">Pull Request</text>
+  <text x="365" y="158" text-anchor="middle" class="s">vers main du fork</text>
+  <text x="365" y="178" text-anchor="middle" class="s">relue par le binôme</text>
+
+  <rect x="500" y="108" width="190" height="96" rx="8" class="box" stroke="#2563eb"/>
+  <text x="595" y="135" text-anchor="middle" class="t">CI — ci.yml</text>
+  <text x="595" y="158" text-anchor="middle" class="s">docker build (×2)</text>
+  <text x="595" y="178" text-anchor="middle" class="s">Trivy : 1 CRITICAL = rouge</text>
+
+  <rect x="730" y="108" width="190" height="96" rx="8" class="box"/>
+  <text x="825" y="135" text-anchor="middle" class="t">Fusion dans main</text>
+  <text x="825" y="158" text-anchor="middle" class="s">ruleset protect-main</text>
+  <text x="825" y="178" text-anchor="middle" class="s">1 approbation + checks verts</text>
+
+  <rect x="960" y="108" width="200" height="96" rx="8" class="box" stroke="#2563eb"/>
+  <text x="1060" y="135" text-anchor="middle" class="t">CD — cd.yml</text>
+  <text x="1060" y="158" text-anchor="middle" class="s">OIDC → build → Trivy</text>
+  <text x="1060" y="178" text-anchor="middle" class="s">push ACR → update ACA</text>
+
+  <g stroke="#2563eb" stroke-width="2" marker-end="url(#a-blue)">
+    <line x1="230" y1="156" x2="268" y2="156"/>
+    <line x1="460" y1="156" x2="498" y2="156"/>
+    <line x1="690" y1="156" x2="728" y2="156"/>
+    <line x1="920" y1="156" x2="958" y2="156"/>
+  </g>
+  <text x="595" y="226" text-anchor="middle" class="l">échec → fusion bloquée</text>
+  <text x="1092" y="226" text-anchor="end" class="l">sur push dans main</text>
+  <text x="600" y="272" text-anchor="middle" class="l" font-style="italic">Tag des images = SHA court du commit (ex. d98f776) : on sait toujours quel code tourne dans quelle révision.</text>
+
+  <!-- ================= BANDE 2 : EXECUTION ================= -->
+  <rect x="20" y="315" width="1160" height="455" rx="12" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text x="40" y="343" class="band" fill="#14532d">2. Exécution — Azure, groupe rg-quiz-app (Italy North)</text>
+
+  <!-- Entra ID -->
+  <rect x="960" y="360" width="200" height="86" rx="8" class="box" stroke="#ea580c"/>
+  <text x="1060" y="386" text-anchor="middle" class="t">Microsoft Entra ID</text>
+  <text x="1060" y="408" text-anchor="middle" class="s">identité id-quiz-github</text>
+  <text x="1060" y="428" text-anchor="middle" class="s">AcrPush + Contributor</text>
+  <line x1="1100" y1="204" x2="1100" y2="358" stroke="#ea580c" stroke-width="2" marker-end="url(#a-orange)"/>
+  <text x="1092" y="262" text-anchor="end" class="l" fill="#9a3412">jeton OIDC</text>
+  <text x="1092" y="278" text-anchor="end" class="l" fill="#9a3412">(sub = …:main)</text>
+
+  <!-- ACR -->
+  <rect x="680" y="360" width="230" height="86" rx="8" class="box" stroke="#2563eb"/>
+  <text x="795" y="386" text-anchor="middle" class="t">Registre ACR</text>
+  <text x="795" y="408" text-anchor="middle" class="s">acrquizmb2611.azurecr.io</text>
+  <text x="795" y="428" text-anchor="middle" class="s">quiz-backend / quiz-frontend :SHA</text>
+  <line x1="975" y1="204" x2="880" y2="358" stroke="#2563eb" stroke-width="2" marker-end="url(#a-blue)"/>
+  <text x="938" y="300" class="l" fill="#1e40af">docker push</text>
+
+  <!-- Environnement ACA -->
+  <rect x="290" y="480" width="640" height="215" rx="10" fill="#ffffff" fill-opacity="0.6" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="305" y="502" class="l" font-weight="700" fill="#14532d">Environnement Container Apps « cae-quiz » (ConsumptionOnly)</text>
+
+  <line x1="795" y1="446" x2="795" y2="518" stroke="#6b7280" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a-grey)"/>
+  <text x="785" y="460" text-anchor="end" class="l" fill="#374151">pull des images</text>
+  <text x="785" y="474" text-anchor="end" class="l" fill="#374151">identité id-quiz-acrpull (AcrPull)</text>
+
+  <rect x="315" y="520" width="260" height="150" rx="8" class="box" stroke="#16a34a"/>
+  <text x="445" y="546" text-anchor="middle" class="t">quiz-frontend</text>
+  <text x="445" y="569" text-anchor="middle" class="s">nginx :8080, non-root</text>
+  <text x="445" y="589" text-anchor="middle" class="s">ingress EXTERNE (HTTPS)</text>
+  <text x="445" y="609" text-anchor="middle" class="s">sert le site construit par Vite</text>
+  <text x="445" y="629" text-anchor="middle" class="s">relaie /api et /health</text>
+  <text x="445" y="652" text-anchor="middle" class="s">BACKEND_URL=http://quiz-backend</text>
+
+  <rect x="655" y="520" width="260" height="150" rx="8" class="box" stroke="#16a34a"/>
+  <text x="785" y="546" text-anchor="middle" class="t">quiz-backend</text>
+  <text x="785" y="569" text-anchor="middle" class="s">Node / Express :3007</text>
+  <text x="785" y="589" text-anchor="middle" class="s">ingress INTERNE (privé)</text>
+  <text x="785" y="609" text-anchor="middle" class="s">secrets ACA (secretref:)</text>
+  <text x="785" y="629" text-anchor="middle" class="s">tini + utilisateur node</text>
+  <text x="785" y="652" text-anchor="middle" class="s">/health sans base de données</text>
+
+  <line x1="575" y1="585" x2="653" y2="585" stroke="#16a34a" stroke-width="2.5" marker-end="url(#a-green)"/>
+  <text x="614" y="575" text-anchor="middle" class="l" fill="#166534">HTTP</text>
+  <text x="614" y="603" text-anchor="middle" class="l" fill="#166534">interne</text>
+
+  <!-- Navigateur -->
+  <rect x="40" y="540" width="200" height="90" rx="8" class="box" stroke="#16a34a"/>
+  <text x="140" y="568" text-anchor="middle" class="t">Navigateur</text>
+  <text x="140" y="591" text-anchor="middle" class="s">quiz + page admin</text>
+  <text x="140" y="611" text-anchor="middle" class="s">/gestion-quiz</text>
+  <line x1="240" y1="585" x2="313" y2="585" stroke="#16a34a" stroke-width="2.5" marker-end="url(#a-green)"/>
+  <text x="262" y="575" text-anchor="middle" class="l" fill="#166534">HTTPS</text>
+
+  <!-- Neon -->
+  <rect x="975" y="520" width="185" height="120" rx="8" class="box" stroke="#16a34a"/>
+  <text x="1067" y="546" text-anchor="middle" class="t">Neon PostgreSQL 17</text>
+  <text x="1067" y="569" text-anchor="middle" class="s">Frankfurt (hors Azure)</text>
+  <text x="1067" y="592" text-anchor="middle" class="s">users → quiz_results</text>
+  <text x="1067" y="612" text-anchor="middle" class="s">→ answers</text>
+  <line x1="915" y1="585" x2="973" y2="585" stroke="#16a34a" stroke-width="2.5" marker-end="url(#a-green)"/>
+  <text x="950" y="575" text-anchor="middle" class="l" fill="#166534">TLS</text>
+
+  <!-- Resend -->
+  <rect x="975" y="670" width="185" height="56" rx="8" fill="#ffffff" stroke="#9ca3af" stroke-dasharray="5 4"/>
+  <text x="1067" y="694" text-anchor="middle" class="t" font-size="14">Resend (email)</text>
+  <text x="1067" y="714" text-anchor="middle" class="s">facultatif, clé factice</text>
+  <path d="M 860 670 Q 900 700 973 698" fill="none" stroke="#9ca3af" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#a-grey)"/>
+
+  <!-- Log Analytics -->
+  <rect x="315" y="712" width="600" height="40" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="615" y="737" text-anchor="middle" class="s">Log Analytics : logs stdout/stderr des conteneurs (az containerapp logs show)</text>
+
+  <!-- ================= LEGENDE ================= -->
+  <rect x="20" y="790" width="1160" height="95" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+  <line x1="40" y1="815" x2="80" y2="815" stroke="#2563eb" stroke-width="2.5" marker-end="url(#a-blue)"/>
+  <text x="90" y="819" class="l">livraison du code</text>
+  <line x1="230" y1="815" x2="270" y2="815" stroke="#16a34a" stroke-width="2.5" marker-end="url(#a-green)"/>
+  <text x="280" y="819" class="l">requête d'un utilisateur</text>
+  <line x1="450" y1="815" x2="490" y2="815" stroke="#ea580c" stroke-width="2.5" marker-end="url(#a-orange)"/>
+  <text x="500" y="819" class="l">authentification sans mot de passe</text>
+  <line x1="740" y1="815" x2="780" y2="815" stroke="#6b7280" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a-grey)"/>
+  <text x="790" y="819" class="l">téléchargement / appel facultatif</text>
+
+  <text x="40" y="848" class="l"><tspan font-weight="700">Une requête :</tspan> navigateur → HTTPS → nginx (frontend) → /api ou /health → backend privé → Neon (TLS). Les questions sont déjà dans le site (intégrées au build Vite).</text>
+  <text x="40" y="870" class="l"><tspan font-weight="700">Les secrets :</tspan> .env.azure (local, ignoré par git) → secrets Container Apps. Jamais dans l'image, ni dans git, ni dans GitHub (la CD n'a que des identifiants OIDC).</text>
+</svg>

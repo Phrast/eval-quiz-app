@@ -11,6 +11,12 @@
 | Identité de pull | `id-quiz-acrpull` (rôle AcrPull sur l'ACR) |
 | URL publique | `https://quiz-frontend.politeplant-23b538ef.italynorth.azurecontainerapps.io` |
 
+## Vue d'ensemble : du code à l'utilisateur
+
+![Schéma Quiz App : livraison du code (CI/CD) et exécution sur Azure](schema-quiz-app.svg)
+
+Version PNG pour les diapositives : [schema-quiz-app.png](schema-quiz-app.png).
+
 ## Architecture cloud
 
 ```mermaid
