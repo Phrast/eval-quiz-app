@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+.env
+.env.*
+backend
+database
+docs
+preuves
+scripts
+*.md
