@@ -11,18 +11,25 @@ cd "$(dirname "$0")/.."
 source scripts/config.sh
 
 CI_ID_NAME="id-quiz-github"
-GITHUB_SUBJECT="repo:Phrast/eval-quiz-app:ref:refs/heads/main"   # casse exacte : seule la branche main peut obtenir un jeton
+# Subject exact présenté par GitHub : il contient les identifiants numériques (immuables) du propriétaire et du dépôt,
+# donc un dépôt recréé avec le même nom ne peut pas obtenir de jeton. Seule la branche main est autorisée.
+GITHUB_SUBJECT="repo:Phrast@98549218/eval-quiz-app@1472866739:ref:refs/heads/main"
 
 az identity show -n "$CI_ID_NAME" -g "$RG" -o none 2>/dev/null || \
   az identity create -n "$CI_ID_NAME" -g "$RG" -o none
 CLIENT_ID=$(az identity show -n "$CI_ID_NAME" -g "$RG" --query clientId -o tsv)
 PRINCIPAL=$(az identity show -n "$CI_ID_NAME" -g "$RG" --query principalId -o tsv)
 
-az identity federated-credential show --name github-main --identity-name "$CI_ID_NAME" -g "$RG" -o none 2>/dev/null || \
-  az identity federated-credential create --name github-main --identity-name "$CI_ID_NAME" -g "$RG" \
-    --issuer https://token.actions.githubusercontent.com \
-    --subject "$GITHUB_SUBJECT" \
-    --audiences api://AzureADTokenExchange -o none
+# create si absent, update sinon : relancer le script corrige aussi un subject existant
+if az identity federated-credential show --name github-main --identity-name "$CI_ID_NAME" -g "$RG" -o none 2>/dev/null; then
+  FC_ACTION=update
+else
+  FC_ACTION=create
+fi
+az identity federated-credential "$FC_ACTION" --name github-main --identity-name "$CI_ID_NAME" -g "$RG" \
+  --issuer https://token.actions.githubusercontent.com \
+  --subject "$GITHUB_SUBJECT" \
+  --audiences api://AzureADTokenExchange -o none
 
 ACR_ID=$(az acr show -n "$ACR_NAME" --query id -o tsv)
 RG_ID=$(az group show -n "$RG" --query id -o tsv)
