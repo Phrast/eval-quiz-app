@@ -32,16 +32,8 @@ jobs:
       - name: Tag traçable = SHA court du commit
         run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
-      - name: Connexion Azure (OIDC)
-        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906       # v3.1.0
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Connexion à ACR
-        run: az acr login --name "${{ vars.ACR_NAME }}"
-
+      # Build et scan AVANT toute connexion Azure : aucun accès Azure n'est présent
+      # sur la machine pendant que Trivy tourne (il reçoit le socket Docker)
       - name: Construire les images
         run: |
           docker build -t "$ACR/quiz-backend:$TAG" ./backend
@@ -53,6 +45,16 @@ jobs:
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v trivy-cache:/root/.cache/ \
               "$TRIVY_IMAGE" image --no-progress --severity CRITICAL --exit-code 1 "$ACR/quiz-$svc:$TAG"
           done
+
+      - name: Connexion Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906       # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Connexion à ACR
+        run: az acr login --name "${{ vars.ACR_NAME }}"
 
       - name: Publier dans ACR
         run: |
