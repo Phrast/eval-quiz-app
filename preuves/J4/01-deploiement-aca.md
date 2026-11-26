@@ -233,3 +233,16 @@ Voir aussi [`diagnostic.md`](diagnostic.md) : vraie dépendance de démarrage du
 | Secrets dans ACA (`secretref:`), pas dans l'image | ✔ |
 | Révisions et logs consultables | ✔ |
 | Script relançable sans erreur | ✔ deuxième exécution sans erreur, nouvelles révisions `d98f776` (§7) |
+
+---
+
+## Captures du portail Azure
+
+Identifiant d'abonnement et compte étudiant masqués.
+
+| Capture | Ce qu'elle montre |
+|---|---|
+| ![Groupe de ressources](portail-ressources.png) | groupe `rg-quiz-app` en Italy North, abonnement Azure for Students |
+| ![Frontend](portail-frontend.png) | `quiz-frontend` en exécution, URL publique, environnement `cae-quiz` |
+| ![Révisions](portail-revisions.png) | révisions du backend et répartition du trafic |
+| ![Identité AcrPull](portail-identite.png) | `id-quiz-acrpull` : rôle **AcrPull** limité au registre `acrquizmb2611` |
