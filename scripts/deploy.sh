@@ -40,8 +40,17 @@ docker push "$ACR_SERVER/quiz-frontend:$TAG"
 
 # ---------------------------------------------------------------- Partie 2 : Container Apps (J4)
 log "Environnement Container Apps $ENV_NAME"
+# Mode ConsumptionOnly explicite : les versions récentes de l'extension créent sinon un environnement
+# "Express", qui refuse --allow-insecure (nécessaire pour que nginx joigne le backend en HTTP interne).
 az containerapp env show -n "$ENV_NAME" -g "$RG" -o none 2>/dev/null || \
-  az containerapp env create -n "$ENV_NAME" -g "$RG" -l "$LOCATION" -o none
+  az containerapp env create -n "$ENV_NAME" -g "$RG" -l "$LOCATION" \
+    --environment-mode ConsumptionOnly -o none
+ENV_MODE=$(az containerapp env show -n "$ENV_NAME" -g "$RG" --query properties.environmentMode -o tsv)
+if [ "$ENV_MODE" = "Express" ]; then
+  echo "L'environnement $ENV_NAME est en mode Express (allow-insecure impossible). Supprimez-le puis relancez :"
+  echo "  az containerapp env delete -n $ENV_NAME -g $RG --yes"
+  exit 1
+fi
 
 log "Identité managée $PULL_IDENTITY (AcrPull sur $ACR_NAME uniquement)"
 az identity show -n "$PULL_IDENTITY" -g "$RG" -o none 2>/dev/null || \
@@ -73,9 +82,10 @@ else
     --env-vars DATABASE_URL=secretref:database-url JWT_SECRET=secretref:jwt-secret \
                ADMIN_USERNAME="$ADMIN_USERNAME" ADMIN_PASSWORD=secretref:admin-password \
                RESEND_API_KEY=secretref:resend-api-key FROM_EMAIL="$FROM_EMAIL" -o none
-  # nginx parle au backend en HTTP dans l'environnement : sans ceci, l'ingress répond 301 (redirection HTTPS)
-  az containerapp ingress update -n "$BACKEND_APP" -g "$RG" --allow-insecure -o none
 fi
+# nginx parle au backend en HTTP dans l'environnement : sans ceci, l'ingress répond 301 (redirection HTTPS).
+# Hors du if : réappliqué à chaque lancement, même si un lancement précédent s'est arrêté juste après la création.
+az containerapp ingress update -n "$BACKEND_APP" -g "$RG" --allow-insecure -o none
 
 log "Frontend $FRONTEND_APP (ingress externe, port 8080)"
 # Le backend doit exister avant : nginx résout http://quiz-backend au démarrage.
