@@ -11,7 +11,7 @@ La règle (*ruleset*) `protect-main` s'applique à `main`. Son statut est **Acti
 | Restrict deletions | ✔ |
 | Block force pushes | ✔ |
 | Require a pull request before merging | ✔ : 1 approbation requise, approbation annulée en cas de nouveau commit, conversations à résoudre |
-| Require status checks to pass | sera activée à l'étape CI (J6-A) |
+| Require status checks to pass | activée à l'étape CI (voir [02-ci-pull-request.md](02-ci-pull-request.md)) |
 
 ![Ruleset protect-main : statut et cible](01-ruleset-protect-main-1.png)
 
