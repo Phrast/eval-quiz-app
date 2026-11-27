@@ -6,7 +6,7 @@ export const Questions = [
     correct: "docker build",
   },
   {
-    question: "Quelle est la principale fonction d'un volume Docker ?",
+    question: "À quoi sert principalement un volume Docker ?",
     answers: [
       "Stocker les images Docker",
       "Partager des données entre le conteneur et l'hôte",
